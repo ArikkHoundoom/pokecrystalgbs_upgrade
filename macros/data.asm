@@ -1,101 +1,121 @@
-; Value macros
-
-; Many arbitrary percentages are simple base-10 or base-16 values:
-; -  10 = 4 percent
-; -  15 = 6 percent
-; - $10 = 6 percent + 1 = 7 percent - 1
-; -  20 = 8 percent
-; -  25 = 10 percent
-; -  30 = 12 percent
-; -  40 = 16 percent
-; -  50 = 20 percent - 1
-; -  60 = 24 percent - 1
-; -  70 = 28 percent - 1
-; -  80 = 31 percent + 1 = 32 percent - 1
-; -  85 = 33 percent + 1 = 34 percent - 1
-; - 100 = 39 percent + 1 = 40 percent - 2
-; - 120 = 47 percent + 1
-; - 123 = 49 percent - 1
-; - 160 = 63 percent
-; - 180 = 71 percent - 1 = 70 percent + 2
-; - 200 = 79 percent - 1
-; - 230 = 90 percent + 1
-DEF percent EQUS "* $ff / 100"
-
-; e.g. 1 out_of 2 == 50 percent + 1 == $80
-DEF out_of EQUS "* $100 /"
-
-MACRO assert_power_of_2
-	assert (\1) & ((\1) - 1) == 0, "\1 must be a power of 2"
-ENDM
-
 ; Constant data (db, dw, dl) macros
 
-MACRO dwb
+dwb: MACRO
 	dw \1
 	db \2
-ENDM
+	ENDM
 
-MACRO dbw
+dbw: MACRO
 	db \1
 	dw \2
-ENDM
+	ENDM
 
-MACRO dn ; nybbles
+dbbw: MACRO
+	db \1, \2
+	dw \3
+	ENDM
+
+dbww: MACRO
+	db \1
+	dw \2, \3
+	ENDM
+
+dbwww: MACRO
+	db \1
+	dw \2, \3, \4
+	ENDM
+
+dn: MACRO ; nybbles
 	rept _NARG / 2
-		db ((\1) << 4) | (\2)
-		shift 2
+	db ((\1) << 4) | (\2)
+	shift
+	shift
 	endr
-ENDM
+	ENDM
 
-MACRO dc ; "crumbs"
+dc: MACRO ; "crumbs"
 	rept _NARG / 4
-		db ((\1) << 6) | ((\2) << 4) | ((\3) << 2) | (\4)
-		shift 4
+	db ((\1) << 6) | ((\2) << 4) | ((\3) << 2) | (\4)
+	shift
+	shift
+	shift
+	shift
 	endr
-ENDM
+	ENDM
 
-MACRO dt ; three-byte (big-endian)
-	db LOW((\1) >> 16), HIGH(\1), LOW(\1)
-ENDM
+dx: MACRO
+x = 8 * ((\1) - 1)
+	rept \1
+	db ((\2) >> x) & $ff
+x = x + -8
+	endr
+	ENDM
 
-MACRO dd ; four-byte (big-endian)
-	db HIGH((\1) >> 16), LOW((\1) >> 16), HIGH(\1), LOW(\1)
-ENDM
+dt: MACRO ; three-byte (big-endian)
+	dx 3, \1
+	ENDM
 
-MACRO bigdw ; big-endian word
-	db HIGH(\1), LOW(\1)
-ENDM
+dd: MACRO ; four-byte (big-endian)
+	dx 4, \1
+	ENDM
 
-MACRO dba ; dbw bank, address
+bigdw: MACRO ; big-endian word
+	dx 2, \1
+	ENDM
+
+dba: MACRO ; dbw bank, address
 	rept _NARG
-		dbw BANK(\1), \1
-		shift
+	dbw BANK(\1), \1
+	shift
 	endr
-ENDM
+	ENDM
 
-MACRO dab ; dwb address, bank
+dab: MACRO ; dwb address, bank
 	rept _NARG
-		dwb \1, BANK(\1)
-		shift
+	dwb \1, BANK(\1)
+	shift
 	endr
-ENDM
+	ENDM
 
-MACRO dba_pic ; dbw bank, address
+dba_pic: MACRO ; dbw bank, address
 	db BANK(\1) - PICS_FIX
 	dw \1
 ENDM
 
-MACRO bcd
-	rept _NARG
-		dn ((\1) % 100) / 10, (\1) % 10
-		shift
+
+dbpixel: MACRO
+if _NARG >= 4
+	db \1 * 8 + \3, \2 * 8 + \4
+else
+	db \1 * 8, \2 * 8
+endc
+endm
+
+dsprite: MACRO
+; conditional segment is there because not every instance of
+; this macro is directly OAM
+if _NARG >= 7 ; y tile, y pxl, x tile, x pxl, vtile offset, flags, palette
+	db (\1 * 8) % $100 + \2, (\3 * 8) % $100 + \4, \5, (\6 << 3) + (\7 & PALETTE_MASK)
+else
+	db (\1 * 8) % $100 + \2, (\3 * 8) % $100 + \4, \5, \6
+endc
+endm
+
+
+sine_wave: MACRO
+; \1: amplitude
+x = 0
+	rept $20
+	; Round up.
+	dw (sin(x) + (sin(x) & $ff)) >> 8
+x = x + (\1) * $40000
 	endr
 ENDM
 
-MACRO sine_table
-; \1 samples of sin(x) from x=0 to x<0.5 turns (pi radians)
-	for x, \1
-		dw sin(x * 0.5 / (\1))
+
+bcd: MACRO
+	rept _NARG
+	dn ((\1) % 100) / 10, (\1) % 10
+	shift
 	endr
 ENDM

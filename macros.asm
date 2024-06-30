@@ -1,6 +1,4 @@
-INCLUDE "macros/code.asm"
-INCLUDE "macros/const.asm"
-INCLUDE "macros/asserts.asm"
+INCLUDE "macros/enum.asm"
 INCLUDE "macros/data.asm"
-INCLUDE "macros/gfx.asm"
+INCLUDE "macros/legacy.asm"
 INCLUDE "macros/scripts/audio.asm"

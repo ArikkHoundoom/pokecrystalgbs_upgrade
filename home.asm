@@ -1,8 +1,8 @@
-;DEF NUM_SONGS			EQU 107
-DEF Options				EQU 0
-
+NUM_SONGS			EQU 102
+Options				EQU 0
 
 INCLUDE "includes.asm"
+
 
 SECTION "NULL", ROM0
 NULL::
@@ -40,7 +40,7 @@ _StartGB:
 
 SECTION "Home", ROM0[$2FEA] ;this spot just fits the data following in home bank. This is also in the MAKEFILE in the dd command
 	db $47,$42,$53,01 ;version 1
-	db NUM_MUSIC_SONGS
+	db NUM_SONGS
 	db 1 ;starting song
 	dw _Start ;load
 	dw _Start ;init
@@ -51,4 +51,7 @@ INCBIN "gbsinfo.bin", $0, $60 - $0
 
 INCLUDE "home/init.asm"
 INCLUDE "home/audio.asm"
+INCLUDE "audio/engine.asm"
+INCLUDE "audio/music/nothing.asm"
+INCLUDE "audio/music_pointers.asm"
 INCLUDE "audio.asm"
