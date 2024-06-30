@@ -1,15 +1,13 @@
-_LoadMusicByte:: ; 3b86
-; CurMusicByte = [a:de]
-GLOBAL LoadMusicByte
-
-	ld [hROMBank], a
+_LoadMusicByte::
+; [wCurMusicByte] = [a:de]
+	ldh [hROMBank], a
 	ld [MBC3RomBank], a
 
 	ld a, [de]
-	ld [CurMusicByte], a
+	ld [wCurMusicByte], a
 	ld a, BANK(LoadMusicByte)
 
-	ld [hROMBank], a
+	ldh [hROMBank], a
 	ld [MBC3RomBank], a
 	ret
 ; 3b97
